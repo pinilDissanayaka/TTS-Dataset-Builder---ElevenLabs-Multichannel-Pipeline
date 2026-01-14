@@ -48,6 +48,92 @@ def is_sinhala_by_unicode(text):
     
     return (sinhala_chars / total_chars) >= 0.8
 
+def remove_ellipsis(metadata_csv=METADATA_CSV, dry_run=False):
+    """
+    Remove ellipsis (...) from text entries in the metadata CSV.
+    
+    Args:
+        metadata_csv: Path to the metadata CSV file
+        dry_run: If True, only show what would be changed without actually changing
+    
+    Returns:
+        Dictionary with statistics about the cleaning process
+    """
+    if not os.path.exists(metadata_csv):
+        print(f"[!] Metadata file not found: {metadata_csv}")
+        return {"error": "Metadata file not found"}
+    
+    print(f"[+] Loading metadata from: {metadata_csv}")
+    
+    # Read the metadata file
+    cleaned_rows = []
+    changed_count = 0
+    
+    with open(metadata_csv, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+    
+    print(f"[+] Total rows: {len(lines)}")
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        # Parse the line (format: filename|text)
+        parts = line.split('|', 1)
+        if len(parts) != 2:
+            print(f"[!] Skipping malformed line: {line}")
+            continue
+        
+        filename, text = parts
+        original_text = text
+        
+        # Remove ellipsis and clean up extra spaces
+        cleaned_text = text.replace('...', '').replace('  ', ' ').strip()
+        
+        if original_text != cleaned_text:
+            changed_count += 1
+            if dry_run:
+                print(f"[~] Would change: {filename}")
+                print(f"    Before: {original_text}")
+                print(f"    After:  {cleaned_text}")
+        
+        cleaned_rows.append(f"{filename}|{cleaned_text}")
+    
+    print(f"\n[+] Rows processed: {len(cleaned_rows)}")
+    print(f"[+] Rows with changes: {changed_count}")
+    
+    if dry_run:
+        print("\n[DRY RUN] - No changes will be saved")
+        return {
+            "total_rows": len(lines),
+            "changed": changed_count,
+            "dry_run": True
+        }
+    
+    # Save cleaned metadata
+    if cleaned_rows:
+        with open(metadata_csv, 'w', encoding='utf-8') as f:
+            for row in cleaned_rows:
+                f.write(row + '\n')
+        print(f"\n[+] Saved cleaned metadata to: {metadata_csv}")
+    else:
+        print(f"\n[!] No rows to save! Metadata file not modified.")
+    
+    stats = {
+        "total_rows": len(lines),
+        "changed": changed_count,
+        "dry_run": False
+    }
+    
+    print(f"\n{'='*60}")
+    print("[+] Ellipsis removal complete!")
+    print(f"  Total rows processed: {stats['total_rows']}")
+    print(f"  Rows modified: {stats['changed']}")
+    print(f"{'='*60}")
+    
+    return stats
+
 def clean_non_sinhala_rows(metadata_csv=METADATA_CSV, wav_dir=WAV_DIR, dry_run=False):
     """
     Clean the dataset by removing rows that contain non-Sinhala characters.
@@ -156,17 +242,35 @@ def clean_non_sinhala_rows(metadata_csv=METADATA_CSV, wav_dir=WAV_DIR, dry_run=F
     return stats
 
 if __name__ == "__main__":
-    # Run the cleaning process
-    print("Starting data cleaning process...\n")
+    import sys
     
-    # First do a dry run to see what would be deleted
-    print("=== DRY RUN ===")
-    clean_non_sinhala_rows(dry_run=True)
-    
-    # Ask for confirmation
-    response = input("\nDo you want to proceed with deletion? (yes/no): ")
-    if response.lower() in ['yes', 'y']:
-        print("\n=== ACTUAL CLEANING ===")
-        clean_non_sinhala_rows(dry_run=False)
+    # Check if user wants to remove ellipsis
+    if len(sys.argv) > 1 and sys.argv[1] == "--remove-ellipsis":
+        print("Starting ellipsis removal process...\n")
+        
+        # First do a dry run to see what would be changed
+        print("=== DRY RUN ===")
+        remove_ellipsis(dry_run=True)
+        
+        # Ask for confirmation
+        response = input("\nDo you want to proceed with changes? (yes/no): ")
+        if response.lower() in ['yes', 'y']:
+            print("\n=== ACTUAL CLEANING ===")
+            remove_ellipsis(dry_run=False)
+        else:
+            print("[!] Ellipsis removal cancelled.")
     else:
-        print("[!] Cleaning cancelled.")
+        # Run the cleaning process for non-Sinhala rows
+        print("Starting data cleaning process...\n")
+        
+        # First do a dry run to see what would be deleted
+        print("=== DRY RUN ===")
+        clean_non_sinhala_rows(dry_run=True)
+        
+        # Ask for confirmation
+        response = input("\nDo you want to proceed with deletion? (yes/no): ")
+        if response.lower() in ['yes', 'y']:
+            print("\n=== ACTUAL CLEANING ===")
+            clean_non_sinhala_rows(dry_run=False)
+        else:
+            print("[!] Cleaning cancelled.")
