@@ -1,5 +1,11 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 # ElevenLabs API Configuration
-ELEVENLABS_API_KEY = "YOUR_API_KEY"  # Replace with your ElevenLabs API key
+ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
 
 # Audio Settings
 SAMPLE_RATE = 16000  # 16kHz recommended for ElevenLabs
