@@ -5,7 +5,7 @@ load_dotenv()
 
 # ElevenLabs
 ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
-ELEVENLABS_MODEL = "eleven_multilingual_v1"
+ELEVENLABS_MODEL = "scribe_v2"
 USE_MULTI_CHANNEL = False
 
 # Audio processing
