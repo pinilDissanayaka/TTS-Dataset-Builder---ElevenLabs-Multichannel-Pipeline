@@ -1,0 +1,6 @@
+yt-dlp
+elevenlabs
+pydub
+tqdm
+soundfile
+numpy

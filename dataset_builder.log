@@ -1,0 +1,6 @@
+2026-01-14 10:57:04,234 - __main__ - INFO - ============================================================
+2026-01-14 10:57:04,313 - __main__ - INFO - ============================================================
+2026-01-14 10:57:04,314 - __main__ - INFO - Loaded 2 URL(s) from youtube_urls.txt
+2026-01-14 10:57:04,314 - __main__ - INFO - 
+[1/5] Downloading YouTube audio...
+2026-01-14 10:57:04,315 - downloader - INFO - Downloading audio from: https://www.youtube.com/shorts/Xk7IA4smUcw

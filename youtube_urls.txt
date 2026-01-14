@@ -1,0 +1,17 @@
+# YouTube URLs Configuration
+# Add one URL per line (videos or playlists)
+# Lines starting with # are comments and will be ignored
+# Empty lines will be skipped
+
+# Example single video:
+# https://www.youtube.com/watch?v=VIDEO_ID
+
+# Example playlist:
+# https://www.youtube.com/playlist?list=PLAYLIST_ID
+
+# Example shorts:
+https://www.youtube.com/shorts/Xk7IA4smUcw
+
+# Add your URLs below:
+
+https://www.youtube.com/shorts/Xk7IA4smUcw
