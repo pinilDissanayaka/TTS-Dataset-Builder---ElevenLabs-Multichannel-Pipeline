@@ -1,2 +1,5 @@
 .vscode
 .env
+data/
+outputs/
+data/*
