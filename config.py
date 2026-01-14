@@ -1,32 +1,23 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# ElevenLabs API Configuration
-ELEVENLABS_API_KEY = os.getenv('ELEVENLABS_API_KEY')
+# ElevenLabs
+ELEVENLABS_API_KEY = os.environ.get("ELEVENLABS_API_KEY", "")
+ELEVENLABS_MODEL = "eleven_multilingual_v1"
+USE_MULTI_CHANNEL = False
 
-# Audio Settings
-SAMPLE_RATE = 16000  # 16kHz recommended for ElevenLabs
-CHANNELS = 1  # Will be converted from multichannel after transcription
+# Audio processing
+CHUNK_MIN_SEC = 3      # Minimum chunk length
+CHUNK_MAX_SEC = 10     # Maximum chunk length
+MIN_SILENCE_LEN_MS = 400
+SILENCE_THRESH_DB = -35
+KEEP_SILENCE_MS = 150
 
-# Chunking Settings
-MIN_SEGMENT_SEC = 2.0
-MAX_SEGMENT_SEC = 10.0
-CHUNK_DURATION_SEC = 300  # 5-minute chunks for large files
-
-# Language
-LANGUAGE = "si"  # Sinhala
-
-# Directory Structure
-RAW_AUDIO_DIR = "data/raw_audio"
-WAV_AUDIO_DIR = "data/wav_audio"
-CHUNKS_WAV_DIR = "data/chunks/wavs"
-FINAL_WAVS_DIR = "data/final_dataset/wavs"
-METADATA_PATH = "data/final_dataset/metadata.csv"
-
-# ElevenLabs Speech-to-Text Settings
-ELEVENLABS_MODEL = "scribe_v2"
-USE_MULTI_CHANNEL = True
-MAX_CHANNELS = 5
+# Paths
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DOWNLOAD_DIR = os.path.join(BASE_DIR, "downloads")
+WAV_DIR = os.path.join(BASE_DIR, "wavs")
+METADATA_CSV = os.path.join(BASE_DIR, "metadata.csv")
+URLs_FILE = os.path.join(BASE_DIR, "urls.txt")
