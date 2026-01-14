@@ -36,10 +36,10 @@ def transcribe_audio():
         # Process large files in chunks
         if duration_sec > CHUNK_DURATION_SEC:
             logger.info(f"  Large file detected ({duration_sec:.1f}s), processing in chunks...")
-            all_transcripts = process_large_multichannel_file(
+            all_words = process_large_multichannel_file(
                 client, file_path, CHUNK_DURATION_SEC
             )
-            results[file] = convert_transcripts_to_segments(all_transcripts)
+            results[file] = convert_words_to_segments(all_words)
         else:
             # Process normally
             with open(file_path, 'rb') as audio_file:
@@ -65,7 +65,7 @@ def process_large_multichannel_file(client, file_path, chunk_duration):
     audio = AudioSegment.from_file(file_path)
     duration_ms = len(audio)
     chunk_size_ms = chunk_duration * 1000
-    all_transcripts = []
+    all_words = []
 
     for start_ms in range(0, duration_ms, chunk_size_ms):
         end_ms = min(start_ms + chunk_size_ms, duration_ms)
@@ -85,18 +85,72 @@ def process_large_multichannel_file(client, file_path, chunk_duration):
                 timestamps_granularity='word'
             )
 
-        # Adjust timestamps
+        # Extract and adjust timestamps (create new dictionaries since word objects are frozen)
+        time_offset = start_ms / 1000
+        
         if hasattr(result, 'transcripts'):
             for transcript in result.transcripts:
                 for word in transcript.words or []:
-                    word.start += start_ms / 1000
-                    word.end += start_ms / 1000
-            all_transcripts.extend(result.transcripts)
+                    if word.type == 'word':
+                        all_words.append({
+                            'text': word.text,
+                            'start': word.start + time_offset,
+                            'end': word.end + time_offset,
+                            'speaker_id': getattr(word, 'speaker_id', 'speaker_0'),
+                            'channel': getattr(transcript, 'channel_index', 0)
+                        })
 
         # Clean up
         os.remove(chunk_file)
 
-    return all_transcripts
+    return all_words
+
+
+def convert_words_to_segments(all_words):
+    """
+    Convert a list of word dictionaries to segment format.
+    Used for large file processing where words are already extracted.
+    """
+    if not all_words:
+        return []
+    
+    # Sort by timestamp
+    all_words.sort(key=lambda w: w['start'])
+
+    # Group consecutive words by speaker into segments
+    segments = []
+    current_speaker = None
+    current_words = []
+    start_time = 0
+
+    for word in all_words:
+        if word['speaker_id'] != current_speaker:
+            # Save previous segment
+            if current_words:
+                segments.append({
+                    'start': start_time,
+                    'end': current_words[-1]['end'],
+                    'text': ' '.join([w['text'] for w in current_words]),
+                    'speaker': current_speaker
+                })
+
+            # Start new segment
+            current_speaker = word['speaker_id']
+            current_words = [word]
+            start_time = word['start']
+        else:
+            current_words.append(word)
+
+    # Add the last segment
+    if current_words:
+        segments.append({
+            'start': start_time,
+            'end': current_words[-1]['end'],
+            'text': ' '.join([w['text'] for w in current_words]),
+            'speaker': current_speaker
+        })
+
+    return segments
 
 
 def convert_transcripts_to_segments(transcripts):
